@@ -7,7 +7,7 @@ import datetime as dt
 PATH = "/Users/akinbodebams/Documents/projects/BIKESHARE/bikeshare_data_analysis"
 files = os.listdir(PATH)
 CITY_LIST = list(filter(lambda f: f.endswith('.csv'), files))
-MONTH_LIST = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'none']
+MONTH_LIST = ['none', 'jan', 'feb', 'mar', 'apr', 'may', 'jun']
 
 USER_CITY_INPUT = ['ch', 'ny', 'wa']
 CITY_DICT = {USER_CITY_INPUT[i]: CITY_LIST[i] for i in range(len(CITY_LIST))}
@@ -62,7 +62,7 @@ not type None\n').lower()
     return city, month, day
 
 
-def load_data(city, month, day):
+def load_data(city):
     """
     Loads data for the specified city and filters by month and day if applicable.
 
@@ -84,17 +84,7 @@ def load_data(city, month, day):
     df['day_of_week'] = df['Start Time'].dt.day_name()
 
     return df
-def month_data(month):
-    month_dict = {'jan': 1 , 'feb': 2 , 'mar':}
-    month = ''
-    while month not in MONTH_LIST:
-        month = input('Do you want to filter by month? If yes, then type first three letter of month of choice , if\
-    not type None\n').lower()
-        if month not in MONTH_LIST:
-            print('Please enter a valid month name')
-        else:
-            break
-    return month
+
 
 def time_stats(df):
     """Displays statistics on the most frequent times of travel."""
@@ -103,13 +93,12 @@ def time_stats(df):
     start_time = time.time()
 
     # TO DO: display the most common month
-    #months = ['January', 'February', 'March', 'April', 'May', 'June']
+    # months = ['January', 'February', 'March', 'April', 'May', 'June']
     popular_month = df['month'].mode()[0]
     print(f'The most popular month is {popular_month}')
 
     # display the most common day of week
-    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
-                    'Saturday', 'Sunday']
+
     popular_day = df['day_of_week'].mode()[0]
     # popular_day = days_of_week[num]
     print(f'The most popular day of week for start time is {popular_day}.')
@@ -118,13 +107,13 @@ def time_stats(df):
     pop_hour = df['Start Time'].dt.hour.mode()[0]
 
     def timer(pp):
-        if pop_hour > 12 and pop_hour < 24:
-            pp = str(pop_hour - 24) + 'pm'
-        elif pop_hour < 12 and pop_hour > 0:
-            pp = str(pop_hour) + 'am'
+        if 12 < pop_hour < 24:
+            pp = str(abs(pop_hour - 12)) + 'pm'
+        elif 12 > pop_hour > 0:
+            pp = str(abs(pop_hour)) + 'am'
         return pp
 
-    print(f'The most popular hour of week for start time is {pop_hour} or {timer(pop_hour)}.')
+    print(f'The most popular hour of week for start time is {pop_hour}hrs or {timer(pop_hour)}.')
 
     print("\nThis took %s seconds." % (time.time() - start_time))
     print('-' * 40)
@@ -217,7 +206,7 @@ def user_stats(df):
 def main():
     while True:
         city, month, day = get_filters()
-        df = load_data(city, month, day)
+        df = load_data(city)
         time_stats(df)
         station_stats(df)
         trip_duration_stats(df)
