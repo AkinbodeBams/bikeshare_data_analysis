@@ -1,15 +1,12 @@
 # import necessary libraries
 import os
 import time
-
 import pandas as pd
 
-PATH = "/Users/akinbodebams/Documents/projects/BIKESHARE/bikeshare_data_analysis"
-files = os.listdir(PATH)
-CITY_LIST = list(filter(lambda f: f.endswith('.csv'), files))
+#linking part code to path
+CITY_LIST = ['chicago.csv', 'new_york_city.csv', 'washington.csv']
 MONTH_LIST = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'none']
-DAY_LIST = ['mon', 'tue', 'wed', 'thu', 'fri', 'none']
-
+DAY_LIST = ['mon', 'tue', 'wed', 'thu', 'fri','sat','sun', 'none']
 USER_CITY_INPUT = ['ch', 'ny', 'wa']
 CITY_DICT = {USER_CITY_INPUT[i]: CITY_LIST[i] for i in range(len(CITY_LIST))}
 
@@ -29,6 +26,7 @@ New York and Washington.')
     # invalid inputs
 
     city = ''
+    # looping until expected input is given
     while city not in USER_CITY_INPUT:
         city = input('Which city from the given list would you like to get information on ? Type "Ch" for Chicago , \
 "Ny" for New York and "Wa" for Washington.\n').lower()
@@ -38,18 +36,20 @@ New York and Washington.')
         else:
             break
     city = CITY_DICT[city]
-
+    #linking user shortened response to standard or daframes recognizable value
     month_dict = {'jan': 'January', 'feb': 'February', 'mar': 'March', 'apr': 'April', 'may': 'May', 'jun': 'June',
                   'none': 'none'}
     # get user to enter month name
     month = ''
+    # loops until expected response is met
     while month not in MONTH_LIST:
-        month = input('Do you want to filter by month? If yes, type first three letters of month of your choice e.g jan\
+        month = input('Do you want to filter by month? If yes, type the first three letters of month of your choice e.g jan\
 , if not type None\n').lower()
         if month not in MONTH_LIST:
-            print('Please enter a valid month name')
+            month = input(f'You entered {month}, Please enter a valid month name e.g: jan ...jun\n')
         else:
             break
+    #returns the  appropriate month
     month = month_dict[month]
 
     # get user enter week name
@@ -60,7 +60,7 @@ New York and Washington.')
         day = input('Do you want to filter by day? If yes, then type out the first three letters of day of choice e.g \
 mon, tue,wed If not, type in none \n').lower()
         if day not in DAY_LIST:
-            print('Please enter a valid day')
+            day = input(f'You entered {day}, Please enter a valid day e.g mon')
         else:
             break
     day = day_dict[day]
@@ -88,9 +88,9 @@ def load_data(city, month, day):
     df['Start Time'] = pd.to_datetime(df['Start Time'])
 
     # create new columns for month and day
+    df['hour'] = df['Start Time'].dt.hour
     df['month_name'] = df['Start Time'].dt.month_name()
     df['day_name'] = df['Start Time'].dt.day_name()
-    df['hour'] = df['Start Time'].dt.hour
 
     if month != 'none':
         df['month_filtered'] = month
@@ -113,12 +113,13 @@ def load_data(city, month, day):
 
 
 def time_stats(df):
-    """Displays statistics on the most frequent times of travel."""
+    """Displays statistics on the most frequent times of travel.
+        display most occurring month if user  chooses not to filter by month
+        display most occurring day if user chooses not to filter by day
+        display both month and day if users chooses not use any filtering"""
 
     print('\nCalculating The Most Frequent Times of Travel...\n')
     start_time = time.time()
-    month_filtered = df['month_filtered'].mode
-    day_filtered = df['day_filtered'].mode
 
     def time_filter(data):
         """filters response based on user's filter choice"""
@@ -126,7 +127,7 @@ def time_stats(df):
         if 'month_filtered' in df.columns and 'day_filtered' in data.columns:
             pass
         elif 'month_filtered' in df.columns and 'day_filtered' not in data.columns:
-            print(f"{data['day_name'].mode()[0]} is the most occurring day in the {month_filtered} .")
+            print(f"{data['day_name'].mode()[0]} is the most occurring day in the month provided .")
         elif 'month_filtered' not in df.columns and 'day_filtered' in data.columns:
             print(f"{data['month_name'].mode()[0]} is the most occurring month in the data .")
         else:
@@ -139,6 +140,7 @@ def time_stats(df):
     pop_hour = int(df['hour'].mode()[0])
 
     def timer(pp):
+        """ converts time from 24hrs to am and or pm """
         if 12 < pop_hour < 24:
             pp = str(abs(pop_hour - 12)) + 'pm'
         elif 12 > pop_hour > 0:
@@ -153,6 +155,7 @@ def time_stats(df):
         print(f'The most popular hour for start time in chosen Day is {pop_hour}:00hrs or {timer(pop_hour)}.')
     else:
         print(f'The most popular hour for start time in general is {pop_hour}:00hrs or {timer(pop_hour)}.')
+
     # Analysing Gender Distribution if Gender column exist in provided data
     try:
         gender = df["Gender"].mode()[0]
@@ -164,16 +167,11 @@ def time_stats(df):
             print(f'The {gender} gender made more use of this services for the given Day')
         else:
             print(f'The {gender} gender made more use of this services in general ')
-    except KeyError:
-        pass
+    except KeyError as e:
+        print(f'sorry we don\'t have data {e} for this city')
 
     print("\nThis took %s seconds." % (time.time() - start_time))
     print('-' * 40)
-
-
-# df = load_data('chicago.csv','January','none')
-# print(df.columns)
-# time_stats(df)
 
 
 def station_stats(df):
@@ -221,11 +219,6 @@ def station_stats(df):
     print('-' * 40)
 
 
-# load_data('chicago.csv','jan','mon')
-# time_stats(df)
-# station_stats(df)
-
-
 def trip_duration_stats(df):
     """Displays statistics on the total and average trip duration."""
 
@@ -251,12 +244,6 @@ def trip_duration_stats(df):
 
     print("\nThis took %s seconds." % (time.time() - start_time))
     print('-' * 40)
-
-
-# load_data('chicago.csv','January','monday')
-# time_stats(df)
-# station_stats(df)
-# trip_duration_stats(df)
 
 
 def user_stats(df):
@@ -296,11 +283,38 @@ def user_stats(df):
     print('-' * 40)
 
 
-# load_data('chicago.csv','January','monday')
-# time_stats(df)
-# station_stats(df)
-# trip_duration_stats(df)
-# user_stats(df)
+def raw_data(df):
+    """Displays data if user's answer is 'yes',
+    and continues iterating  prompts and displaying the random 5 lines of raw data at each iteration,
+    Stop the program when the user says 'no' or there is no more raw data to display."""
+
+    start = 0
+    stop = 5
+    user_input = True
+    user_input2 = True
+    question = ''
+    while user_input:
+        question = input('Would you like to see some lines of the data. Type yes or no\n').lower()
+        if question == 'yes':
+            print(df.iloc[start:stop, 1:-2])
+            while user_input2:
+                re_question = input('Would you like to see more\n').lower()
+                if re_question.lower() == 'yes':
+                    start += 5
+                    stop += 5
+                    # checks if iteration has reach it max
+                    if stop == df.shape[0]:
+                        user_input = False
+                    print(df.iloc[start:stop, 1:-2])
+                elif re_question == 'no':
+                    user_input = False
+                    user_input2 = False
+                else:
+                    print(f'you entered an invalid response [{re_question}], try again ')
+        elif question == 'no':
+            user_input = False
+        else:
+            print(f'you entered an invalid response [{question}], try again ')
 
 
 def main():
@@ -311,9 +325,11 @@ def main():
         station_stats(df)
         trip_duration_stats(df)
         user_stats(df)
+        raw_data(df)
 
         restart = input('\nWould you like to restart? Enter yes or no.\n')
         if restart.lower() != 'yes':
+            print('Have a nice day')
             break
 
 
